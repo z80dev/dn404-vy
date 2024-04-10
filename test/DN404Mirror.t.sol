@@ -6,6 +6,7 @@ import {DN404, MockDN404} from "./utils/mocks/MockDN404.sol";
 import {MockDN404Ownable} from "./utils/mocks/MockDN404Ownable.sol";
 import {DN404Mirror, MockDN404Mirror} from "./utils/mocks/MockDN404Mirror.sol";
 import {LibSort} from "solady/utils/LibSort.sol";
+import {VyperDeployer} from "lib/utils/VyperDeployer.sol";
 
 contract Invalid721Receiver {}
 
@@ -23,7 +24,7 @@ contract DN404MirrorTest is SoladyTest {
     MockDN404 dn;
     MockDN404Mirror mirror;
 
-    function setUp() public {
+    function setUp() public virtual {
         dn = new MockDN404();
         mirror = new MockDN404Mirror(address(this));
     }
@@ -306,5 +307,16 @@ contract DN404MirrorTest is SoladyTest {
             address(dn).call(abi.encodeWithSignature("nonSupportedFunction123()"));
         assertFalse(success);
         assertEq(result, abi.encodePacked(DN404.FnSelectorNotRecognized.selector));
+    }
+}
+
+contract DN404MirrorVyTest is DN404MirrorTest {
+
+    VyperDeployer vyperDeployer = new VyperDeployer();
+
+    function setUp() public override {
+        dn = new MockDN404();
+        bytes memory constructorArgs = abi.encode(address(this));
+        mirror = MockDN404Mirror(payable(vyperDeployer.deployContract("vyper/", "DN404Mirror", constructorArgs)));
     }
 }
